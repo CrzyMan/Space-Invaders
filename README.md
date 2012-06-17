@@ -1,4 +1,4 @@
-CrzyMan.SpaceInvaders
+Space-Invaders
 =====================
 
 space invaders
