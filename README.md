@@ -7,7 +7,7 @@ The game: Space Invaders (or at least a rudimentary version)
 
 Credits:
 - frodude95
-    art
+    - art
 
 - CrzyMan
-    code
+    - code
