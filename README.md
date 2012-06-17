@@ -6,8 +6,8 @@ This is a collaboration between frodude95 and CrzyMan to make an HTML5 Canvas ga
 The game: Space Invaders (or at least a rudimentary version)
 
 Credits:
-- frodude95
-    - art
+frodude95
+- art
 
-- CrzyMan
-    - code
+CrzyMan
+- code
