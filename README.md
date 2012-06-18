@@ -1,13 +1,10 @@
 Space-Invaders
-=====================
+-----------
+This is a collaboration between frodude95 and CrzyMan to make an HTML5 Canvas game.<br/>
 
-This is a collaboration between frodude95 and CrzyMan to make an HTML5 Canvas game.
+<br/>
+The Game: Space Invaders (or at least a rudimentary version)
 
-The game: Space Invaders (or at least a rudimentary version)
-
-Credits:
-frodude95
-- art
-
-CrzyMan
-- code
+Credits: <br/>
+- frodude95: art
+- CrzyMan: code
