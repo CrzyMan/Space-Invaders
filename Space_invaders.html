@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Space Invaders</title>
+		<style>
+			canvas{
+				border: solid;
+				background-color: black;
+			}
+		</style>
+		
+		<!-- Import external scripts -->
+			<script src="arrays.js"></script>
+			<script src="vectors.js"></script>
+		<!-- -->
+		
+    </head>
+    
+	<body onload="loaded();" bgColor="grey">
+		<!-- loading area -->
+			<img src="Favicon.ico" id="img_ship" onload="this.loaded = true" hidden="true"/>
+			<img src="Favicon.ico" id="img_enemy" onload="this.loaded = true" hidden="true"/>
+			<img src="Favicon.ico" id="img_bullet" onload="this.loaded = true" hidden="true"/>
+		<!-- -->
+		
+        <canvas id='canvas'>
+			This Browser Does Not Support Canvas.
+		</canvas>
+    </body>
+	
+    <script>
+		/* initialization of variables */
+		
+		// stuff for drawing
+		var canvas = document.getElementById('canvas');
+		var ctx = canvas.getContext('2d');
+		
+		canvas.height = window.innerHeight - 30;
+		canvas.width = window.innerWidth - 30;
+		
+		
+		// for images
+		var img_ship = document.getElementById('img_ship'); img_ship.loaded = false;
+		var img_enemy = document.getElementById('img_enemy'); img_enemy.loaded = false;
+		var img_bullet = document.getElementById('img_bullet'); img_bullet.loaded = false;
+		
+		
+		// the levels
+		var enemyClusters = [// level 1
+							 [[1,1,1,1,1,1,1,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,1,1,0,0,1,1,1],
+							  [1,0,0,0,0,0,0,1],
+							  [1,0,0,0,0,0,0,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,1,1,1,1,1,1,1]],
+							 
+							 // level 2
+							 [[1,1,1,1,1,1,1,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,1,1,0,0,1,1,1],
+							  [1,1,1,0,0,1,1,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,0,0,1,1,0,0,1],
+							  [1,1,1,1,1,1,1,1]]
+							 
+							 ];
+		
+		
+		// key detection
+		var Arrows = {left: 37, up: 38, right: 39, down: 40 };
+		var PressedKeys = {left: false, up: false, right: false};
+		document.onkeydown = function(e){
+			var code = e.keyCode || e.which;
+			switch (code){
+				case Arrows.up:
+					PressedKeys.up = true;
+					break;
+				case Arrows.left:
+					PressedKeys.left = true;
+					break;
+				case Arrows.right:
+					PressedKeys.right = true;
+					break;
+				default:
+					break;
+			}
+		}
+		document.onkeyup = function(e){
+			var code = e.keyCode || e.which;
+			switch (code){
+				case Arrows.up:
+					PressedKeys.up = false;
+					break;
+				case Arrows.left:
+					PressedKeys.left = false;
+					break;
+				case Arrows.right:
+					PressedKeys.right = false;
+					break;
+				default:
+					break;
+			}
+		}
+		
+		/* */
+		
+		
+		function loaded(){
+			// if all loaded
+			if (img_bullet.loaded && img_enemy.loaded && img_ship.loaded){
+				console.log("done loading");
+			} else {
+				console.log("still loading");
+				window.setTimeout(load,1000);
+			}
+		}
+		
+		function reset(){
+			
+		}
+		
+		/* Enemy Class */
+		var Enemies = [];
+		var EnemyOffsetRef = 0;
+		function Enemy(x, y) {
+			this.id = Enemies.length;
+			
+			// x based on id
+			this.x = this.id % 8;
+			this.x_offset = 0;
+			
+			// y based on id
+			this.y = Math.floor(this.id / 8);
+			if (y != null) this.y = y;
+			this.y_offset = 0;
+			
+			// function to draw this enemy
+			this.drawMe = function(){
+				ctx.fillStyle = "white";
+				ctx.fillRect(25 + this.x_offset + this.x * 150, 25 + this.y_offset + this.y * 150, 30, 30);
+			};
+			
+			// update per tick
+			this.update = function(){
+				this.x_offset = Math.sin(EnemyOffsetRef) * 10;
+				this.drawMe();
+			}
+			
+			// add this enemy to the array containing all enemies
+			Enemies.push(this);
+		}
+		/**/
+		
+		
+		/* Bullet Class */
+		var Bullets = [];
+		var BulletIdRef = 0;
+		function Bullet() {
+			this.id = BulletIdRef++;
+			
+			// set position and velocity
+			this.pos = new Vector2d(0,0);
+			this.vel = new Vector2d(0,0);
+			
+			// update for each tick
+			this.update = function (){
+				this.pos._add(this.vel);
+				
+				this.drawMe();
+				
+				// collision logic
+			};
+			
+			// function to draw this bullet
+			this.drawMe = function(){
+				
+			};
+			
+			Bullets.push(this);
+		}
+		/* */
+		
+		/* Ship Class */
+		var ship = new Ship();
+		function Ship(){
+			
+			this.pos = new Vector2d(canvas.width / 2 - 10, canvas.height - 25);
+			this.vel = new Vector2d();
+			
+			this.maxSpeed = 20;
+			
+			this.drawMe = function(){
+				ctx.fillRect(this.pos.x, this.pos.y, 20, 20)
+			}
+			
+			this.update = function(){
+				if (PressedKeys.left){
+					this.vel.x = this.vel.x - (this.vel.x>-this.maxSpeed);
+				}
+				if (PressedKeys.right){
+					this.vel.x = this.vel.x + (this.vel.x<this.maxSpeed);
+				}
+				
+				this.pos._add(this.vel);
+				if (this.pos.x > canvas.width - 20 || this.pos.x < 0){
+					this.pos.x = (canvas.width - 20) * (this.pos.x > canvas.width - 20);
+					this.vel.x = 0;
+				}
+				
+				this.vel.x = this.vel.x * 0.9;
+				this.drawMe();
+				
+			}
+		}
+		/* */
+		
+		
+		// make 16 enemies
+		for (var i = 0; i < 16; i++){
+			new Enemy();
+		}
+		
+		
+		window.setInterval(tick,1000/32);
+		function tick(){
+			ctx.clearRect(0,0,canvas.width, canvas.height);
+			
+			EnemyOffsetRef+= 0.1;
+			
+			for (var i = 0; i < Enemies.length; i++){
+				Enemies[i].update();
+			}
+			
+			ship.update();
+		}
+		
+		
+    </script>
+    
+    
+</html>
