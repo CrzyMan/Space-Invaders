@@ -48,7 +48,7 @@
 		
 		
 		// the levels
-		var enemyClusters = [// level 1
+		var enemyLevelClusters = [// level 1
 							 [[1,1,1,1,1,1,1,1],
 							  [1,0,0,1,1,0,0,1],
 							  [1,0,0,1,1,0,0,1],
@@ -130,14 +130,19 @@
 		function Enemy(x, y) {
 			this.id = Enemies.length;
 			
-			// _x never changes, x is updated by x_offset in relation to _x
-			this._x = this.id % 8;
+			/*
+				properties with the prefix _ notates a position in a matrix, from which the position on canvas is determined.
+				this.x and this.y are the literal positions on canvas
+				x_offset and y_offset are added to the _x and _y post calculations, and the x and y are the results
+			*/
+			
+			// uses supplied x if not null, otherwise determined by id
+			this._x = x!=null ? x : this.id % 8;
 			this.x = 0;
 			this.x_offset = 0;
 			
-			// y based on id
-			this._y = Math.floor(this.id / 8);
-			if (y != null) this._y = y;
+			// uses supplied y if not null, otherwise determined by id
+			this._y = y!=null ? y : Math.floor(this.id / 8);
 			this.y = 0;
 			this.y_offset = 0;
 			
@@ -153,9 +158,9 @@
 			// update per tick
 			this.update = function(){
 				this.x_offset = Math.sin(EnemyOffsetRef) * 10;
-				this.x = 25 + this._x * 150 + this.x_offset;
+				this.x = 25 + this._x * 50 + this.x_offset;
 				
-				this.y = 25 + this._y * 150 + this.y_offset;
+				this.y = 25 + this._y * 50 + this.y_offset;
 				
 				this.drawMe();
 			}
@@ -169,7 +174,7 @@
 		/* Bullet Class */
 		var Bullets = [];
 		var BulletIdRef = 0;
-		function Bullet(pos, vel) {
+		function Bullet(pos, vel, isBomb) {
 			this.id = BulletIdRef++;
 			
 			// set position and velocity
@@ -213,6 +218,7 @@
 			Bullets.push(this);
 		}
 		/* */
+		
 		
 		/* Ship Class */
 		var ship = new Ship();
@@ -270,10 +276,16 @@
 		/* */
 		
 		
-		// make 16 enemies
-		for (var i = 0; i < 16; i++){
-			new Enemy();
+		/* make enemies */
+		var level = enemyLevelClusters[0]; //level 1
+		// loop through each position
+		for (var i = 0; i < level.length; i++){
+			for (var ii = 0; ii < level[i].length; ii++){
+				// if the position is on, make an enemy their
+				if (level[i][ii]) new Enemy(ii,i);
+			}
 		}
+		/* */
 		
 		
 		// set of tick at the desired frame rate
