@@ -4,4 +4,4 @@
 // when completed, frodude95 will put an 'x' in the "[ ]"
 // example: [x] frodude95 : Make a favicon
 
-[ ] frodude95 : Make a favicon ;
+[ ] frodude95 : Make a favicon
