@@ -56,58 +56,70 @@
 		
 		// the levels
 		var enemyLevelClusters = [// level 1
-							 [[0,0,0,0,0,0,0,0],
+							 [[1,1,1,1,1,1,1,1],
 							  [1,0,0,1,1,0,0,1],
 							  [1,1,1,1,1,1,1,1],
 							  [1,1,1,0,0,1,1,1],
-							  [1,0,0,0,0,0,0,1],
-							  [1,0,0,0,0,0,0,1],
-							  [1,0,0,1,1,0,0,1],
-							  [1,1,1,1,1,1,1,1]],
+							  [1,1,0,0,0,0,1,1],
+							  [1,1,0,0,0,0,1,1]],
 							 
 							 // level 2
-							 [[0,0,0,0,0,0,0,0],
+							 [[1,1,1,1,1,1,1,1],
 							  [1,0,0,1,1,0,0,1],
 							  [1,0,0,1,1,0,0,1],
 							  [1,1,1,0,0,1,1,1],
 							  [1,1,1,0,0,1,1,1],
-							  [1,0,0,1,1,0,0,1],
-							  [1,0,0,1,1,0,0,1],
-							  [1,1,1,1,1,1,1,1]]
+							  [1,0,0,1,1,0,0,1]]
 							 
 							 ];
 		
+		// Pause Stuff
+		var Paused = false;
+		var canTogglePause = true;
+		
+		// fireing stuff
+		var canFire = true;
 		
 		// key detection
-		var Arrows = {left: 37, up: 38, right: 39, down: 40 };
+		var Keys = {left: 37, up: 38, right: 39, down: 40, p: 80, w: 87};
 		var PressedKeys = {left: false, up: false, right: false};
 		document.onkeydown = function(e){
 			var code = e.keyCode || e.which;
 			switch (code){
-				case Arrows.up:
+				case Keys.up:
 					PressedKeys.up = true;
 					break;
-				case Arrows.left:
+				case Keys.left:
 					PressedKeys.left = true;
 					break;
-				case Arrows.right:
+				case Keys.right:
 					PressedKeys.right = true;
 					break;
+				case Keys.p:
+					TogglePaused();
+					break;
+				case Keys.w:
+					Enemies = [];
+					break;
 				default:
+					//alert(code);
 					break;
 			}
 		}
 		document.onkeyup = function(e){
 			var code = e.keyCode || e.which;
 			switch (code){
-				case Arrows.up:
+				case Keys.up:
 					PressedKeys.up = false;
 					break;
-				case Arrows.left:
+				case Keys.left:
 					PressedKeys.left = false;
 					break;
-				case Arrows.right:
+				case Keys.right:
 					PressedKeys.right = false;
+					break;
+				case Keys.p:
+					canTogglePause = true;
 					break;
 				default:
 					break;
@@ -148,7 +160,7 @@
 			
 			// uses supplied y if not null, otherwise determined by id
 			this._y = y!=null ? y : Math.floor(this.id / 8);
-			this.pos.y = 25 + this._y * 50;
+			this.pos.y = 75 + this._y * 50;
 			
 			// set up velocity
 			this.vel = new Vector2d(3,0)
@@ -230,9 +242,9 @@
 		/* */
 		
 		
-		/* Ship Class */
-		var ship = new Ship();
-		function Ship(){
+		/* Player Class */
+		var player = new Player();
+		function Player(){
 			
 			this.reset = function(){
 				this.width = 30;
@@ -264,14 +276,25 @@
 				}
 				/* */
 				
+				
 				// fire
-				if (PressedKeys.up){
+				if (PressedKeys.up && canFire){
+					
+					// fire
 					this.fire();
+					
+					// no spamming the trigger
+					canFire = false;
+					window.setTimeout("canFire = true;",500);
+					
+					// make it automatic
 					PressedKeys.up = false;
 				}
 				
+				
 				// update position
 				this.pos._add(this.vel);
+				
 				
 				// make sure it doesn't go out of bounds
 				if (this.pos.x > canvas.width - this.width || this.pos.x < 0){
@@ -279,15 +302,17 @@
 					this.vel.x = 0;
 				}
 				
+				
 				// slow it down
 				this.vel.x = this.vel.x * 0.9;
+				
 				
 				// draw it
 				this.drawMe();
 			}
 			
 			this.fire = function(){
-				// make a bullet with a position of exactly the middle of the ship, and a velocity of 10 going up
+				// make a bullet with a position of exactly the middle of the Player, and a velocity of 10 going up
 				new Bullet(new Vector2d(this.pos.x + this.width/2 - 10/2, this.pos.y), new Vector2d(0,-10));
 			}
 		}
@@ -296,6 +321,8 @@
 		
 		// the actual tick function
 		function tick(){
+			// don't tick if paused
+			if (Paused) return;
 			
 			// clear the screen
 			ctx.clearRect(0,0,canvas.width, canvas.height);
@@ -315,13 +342,14 @@
 			}
 			
 			
-			// update the ship
-			ship.update();
+			// update the Player
+			player.update();
 			
 			
 			// check if win
 			if (Enemies.length == 0){
-				window.clearInterval(t);
+				resetAll();
+				player.drawMe();
 				alert("!!!  YOU WIN  !!!");
 			}
 		}
@@ -342,8 +370,8 @@
 		}
 		
 		function resetAll(){
-			// move ship back
-			ship.reset();
+			// move Player back
+			player.reset();
 			
 			// empty arrays
 			Enemies = [];
@@ -357,10 +385,45 @@
 			
 		}
 		
+		function TogglePaused(){
+			// leave if you can't toggle
+			if (!canTogglePause) {
+				return;
+			}
+			
+			// toggle Paused
+			Paused = Paused ? false : true;
+			
+			
+			// make it so you can't toggle (to be reset upon onkeyup)
+			canTogglePause = false;
+			
+			// if it is now paused
+			if (Paused){
+				// make pause menu
+				ctx.save();
+				ctx.fillStyle = "rgba(0,0,0,.3)";
+				ctx.fillRect(0,0,canvas.width, canvas.height);
+				
+				ctx.fillStyle = "rgba(150,150,150,.8)";
+				ctx.fillRect(canvas.width / 2 - 160, canvas.height / 2 - 80, 320, 160);
+				
+				ctx.fillStyle = "White";
+				ctx.font = "60pt Calibri"
+				ctx.fillText("Paused",canvas.width/2 - 120, canvas.height/2 + 20);
+				
+				ctx.restore();						
+			} else { // if it isn't paused
+				ctx.clearRect(0,0,canvas.width, canvas.height);
+				player.drawMe();
+			}
+			
+		}
+		
 		
 		/**** START THE GAME ****/
 		
-		startLevel(1);
+		startLevel(2);
 		
 		/****  ****/
     </script>
