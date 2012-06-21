@@ -39,6 +39,7 @@
 		canvas.height = window.innerHeight - 30;
 		canvas.width = window.innerWidth - 30;
 		
+		var frameRate = 32;
 		
 		// for images
 		var img_ship = document.getElementById('img_ship'); img_ship.loaded = false;
@@ -159,25 +160,43 @@
 		/* Bullet Class */
 		var Bullets = [];
 		var BulletIdRef = 0;
-		function Bullet() {
+		function Bullet(pos, vel) {
 			this.id = BulletIdRef++;
 			
 			// set position and velocity
-			this.pos = new Vector2d(0,0);
-			this.vel = new Vector2d(0,0);
+			this.pos = pos || new Vector2d(0,0);
+			this.vel = vel || new Vector2d(0,0);
+			
+			this.height = 20;
+			this.width = 10;
 			
 			// update for each tick
 			this.update = function (){
+				
+				// move based on vel
 				this.pos._add(this.vel);
 				
+				// remove from Bullets and stop function if offscreen
+				if (this.pos.y + this.height < 0){
+					Bullets.splice(Bullets.indexOf(this), 1);
+					return;
+				}
+				
+				// make collision logic here
+				for (var i =0; i < Enemies.length; i++){
+					if (this.intersectsWith(Enemies[i])){
+						// it hit!!!!!!!
+					}
+				}
+				
+				// draw it
 				this.drawMe();
 				
-				// collision logic
 			};
 			
 			// function to draw this bullet
 			this.drawMe = function(){
-				
+				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 			};
 			
 			Bullets.push(this);
@@ -188,32 +207,53 @@
 		var ship = new Ship();
 		function Ship(){
 			
-			this.pos = new Vector2d(canvas.width / 2 - 10, canvas.height - 25);
+			this.width = 30;
+			
+			this.pos = new Vector2d((canvas.width / 2) - (this.width / 2), canvas.height - 5 - this.width);
 			this.vel = new Vector2d();
 			
-			this.maxSpeed = 20;
+			this.maxSpeed = 10;
 			
 			this.drawMe = function(){
-				ctx.fillRect(this.pos.x, this.pos.y, 20, 20)
+				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.width)
 			}
 			
 			this.update = function(){
+				
+				/* update velocity */
 				if (PressedKeys.left){
-					this.vel.x = this.vel.x - (this.vel.x>-this.maxSpeed);
+					this.vel.x -= (this.vel.x > -this.maxSpeed)*(this.maxSpeed/4);
 				}
 				if (PressedKeys.right){
-					this.vel.x = this.vel.x + (this.vel.x<this.maxSpeed);
+					this.vel.x += (this.vel.x < this.maxSpeed)*(this.maxSpeed/4);
+				}
+				/* */
+				
+				// fire
+				if (PressedKeys.up){
+					this.fire();
+					PressedKeys.up = false;
 				}
 				
+				// update position
 				this.pos._add(this.vel);
-				if (this.pos.x > canvas.width - 20 || this.pos.x < 0){
-					this.pos.x = (canvas.width - 20) * (this.pos.x > canvas.width - 20);
+				
+				// make sure it doesn't go out of bounds
+				if (this.pos.x > canvas.width - this.width || this.pos.x < 0){
+					this.pos.x = (canvas.width - this.width) * (this.pos.x > canvas.width - this.width);
 					this.vel.x = 0;
 				}
 				
+				// slow it down
 				this.vel.x = this.vel.x * 0.9;
-				this.drawMe();
 				
+				// draw it
+				this.drawMe();
+			}
+			
+			this.fire = function(){
+				// make a bullet with a position of exactly the middle of the ship, and a velocity of 10 going up
+				new Bullet(new Vector2d(this.pos.x + this.width/2 - 10/2, this.pos.y), new Vector2d(0,-10));
 			}
 		}
 		/* */
@@ -225,19 +265,33 @@
 		}
 		
 		
-		window.setInterval(tick,1000/32);
+		// set of tick at the desired frame rate
+		window.setInterval(tick,1000/frameRate);
+		
+		// the actual tick function
 		function tick(){
+			
+			// clear the screen
 			ctx.clearRect(0,0,canvas.width, canvas.height);
 			
+			// for the enemy movement
 			EnemyOffsetRef+= 0.1;
 			
+			
+			// (find way to update all bullets and enemies in same loop)
+			// update all enemies
 			for (var i = 0; i < Enemies.length; i++){
 				Enemies[i].update();
 			}
 			
+			// update all Bullets
+			for (var i = 0; i < Bullets.length; i++){
+				Bullets[i].update();
+			}
+			
+			// update the ship
 			ship.update();
 		}
-		
 		
     </script>
     
