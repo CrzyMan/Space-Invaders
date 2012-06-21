@@ -57,11 +57,11 @@
 		// the levels
 		var enemyLevelClusters = [// level 1
 							 [[1,1,1,1,1,1,1,1],
+							  [1,2,0,1,1,2,0,1],
 							  [1,0,0,1,1,0,0,1],
-							  [1,1,1,1,1,1,1,1],
-							  [1,1,1,0,0,1,1,1],
+							  [1,1,1,2,0,1,1,1],
 							  [1,1,0,0,0,0,1,1],
-							  [1,1,0,0,0,0,1,1]],
+							  [1,0,0,0,0,0,0,1]],
 							 
 							 // level 2
 							 [[1,1,1,1,1,1,1,1],
@@ -143,7 +143,7 @@
 		/* Enemy Class */
 		var Enemies = [];
 		var EnemyOffsetRef = 0;
-		function Enemy(x, y) {
+		function Enemy(x, y, isMotherShip) {
 			this.id = Enemies.length;
 			
 			/*
@@ -156,7 +156,7 @@
 			
 			// uses supplied x if not null, otherwise determined by id
 			this._x = x!=null ? x : this.id % 8;
-			this.pos.x = 25 + this._x * 50;
+			this.pos.x = 25 + this._x * 60;
 			
 			// uses supplied y if not null, otherwise determined by id
 			this._y = y!=null ? y : Math.floor(this.id / 8);
@@ -165,8 +165,15 @@
 			// set up velocity
 			this.vel = new Vector2d(3,0)
 			
+			// default size
 			this.width = 30;
 			this.height = 30;
+			
+			// change the size if MotherShip
+			if (isMotherShip){
+				this.width = 90;
+				this.height = 80;
+			}
 			
 			// function to draw this enemy
 			this.drawMe = function(){
@@ -178,7 +185,7 @@
 			this.update = function(){
 				
 				// bounce off imaginary walls
-				if (this.pos.x - this._x * 50 + 25 >= 860 || this.pos.x - this._x * 50 <= 24){
+				if (this.pos.x - this._x * 60 + 25 >= 780 || this.pos.x - this._x * 60 <= 24){
 					this.vel.x = this.vel.x * -1;
 				}
 				
@@ -362,7 +369,8 @@
 			for (var i = 0; i < levelGrid.length; i++){
 				for (var ii = 0; ii < levelGrid[i].length; ii++){
 					// if the position is on, make an enemy their
-					if (levelGrid[i][ii]) new Enemy(ii,i);
+					if (levelGrid[i][ii] == 1) new Enemy(ii,i);
+					else if (levelGrid[i][ii] == 2) new Enemy(ii,i,true);
 				}
 			}
 			
@@ -423,7 +431,7 @@
 		
 		/**** START THE GAME ****/
 		
-		startLevel(2);
+		startLevel(1);
 		
 		/****  ****/
     </script>
