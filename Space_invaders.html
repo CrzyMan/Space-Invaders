@@ -12,7 +12,7 @@
 		<!-- Import external scripts -->
 			<script src="arrays+.js"></script>
 			<script src="vectors.js"></script>
-			<script src="object+.js"></script>
+			<script src="objects+.js"></script>
 		<!-- -->
 		
     </head>
@@ -130,24 +130,33 @@
 		function Enemy(x, y) {
 			this.id = Enemies.length;
 			
-			// x based on id
-			this.x = this.id % 8;
+			// _x never changes, x is updated by x_offset in relation to _x
+			this._x = this.id % 8;
+			this.x = 0;
 			this.x_offset = 0;
 			
 			// y based on id
-			this.y = Math.floor(this.id / 8);
-			if (y != null) this.y = y;
+			this._y = Math.floor(this.id / 8);
+			if (y != null) this._y = y;
+			this.y = 0;
 			this.y_offset = 0;
+			
+			this.width = 30;
+			this.height = 30;
 			
 			// function to draw this enemy
 			this.drawMe = function(){
 				ctx.fillStyle = "white";
-				ctx.fillRect(25 + this.x_offset + this.x * 150, 25 + this.y_offset + this.y * 150, 30, 30);
+				ctx.fillRect(this.x, this.y, this.width, this.height);
 			};
 			
 			// update per tick
 			this.update = function(){
 				this.x_offset = Math.sin(EnemyOffsetRef) * 10;
+				this.x = 25 + this._x * 150 + this.x_offset;
+				
+				this.y = 25 + this._y * 150 + this.y_offset;
+				
 				this.drawMe();
 			}
 			
@@ -182,10 +191,12 @@
 					return;
 				}
 				
-				// make collision logic here
-				for (var i =0; i < Enemies.length; i++){
+				// make collision logic here, going in reverse ensures that all enemies are checked
+				for (var i = Enemies.length - 1; i >= 0; i--){
 					if (this.intersectsWith(Enemies[i])){
-						// it hit!!!!!!!
+						Enemies.splice(i,1);
+						Bullets.splice(Bullets.indexOf(this),1);
+						return;
 					}
 				}
 				
@@ -266,7 +277,7 @@
 		
 		
 		// set of tick at the desired frame rate
-		window.setInterval(tick,1000/frameRate);
+		var t = window.setInterval(tick,1000/frameRate);
 		
 		// the actual tick function
 		function tick(){
@@ -284,15 +295,20 @@
 				Enemies[i].update();
 			}
 			
-			// update all Bullets
-			for (var i = 0; i < Bullets.length; i++){
+			// update all Bullets, going in reverse insures that all bullets are updated
+			// a bullet would be skipped if the one before it was spliced, unless caught and coded for, reverse is just easier
+			for (var i = Bullets.length - 1; i >= 0; i--){
 				Bullets[i].update();
 			}
 			
 			// update the ship
 			ship.update();
+			
+			if (Enemies.length == 0){
+				window.clearInterval(t);
+				alert("!!!  YOU WIN  !!!");
+			}
 		}
-		
     </script>
     
     
