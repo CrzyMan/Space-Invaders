@@ -6,5 +6,5 @@ This is a collaboration between frodude95 and CrzyMan to make an HTML5 Canvas ga
 The Game: Space Invaders (or at least a rudimentary version)
 
 Credits: <br/>
-- frodude95: art
-- CrzyMan: code
+- frodude95: _Chief Aesthetics Officer_
+- CrzyMan: _Chief Software Engineer_
