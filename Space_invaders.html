@@ -35,11 +35,15 @@
 		// stuff for drawing
 		var canvas = document.getElementById('canvas');
 		var ctx = canvas.getContext('2d');
+		ctx.fillStyle = "white";
 		
-		canvas.height = window.innerHeight - 30;
-		canvas.width = window.innerWidth - 30;
+		canvas.height = 560;//window.innerHeight - 30;
+		canvas.width = 1250;//window.innerWidth - 30;
 		
 		var frameRate = 32;
+		// set up interval for each tick
+		var t = window.setInterval();
+		
 		
 		// for images
 		var img_ship = document.getElementById('img_ship'); img_ship.loaded = false;
@@ -120,9 +124,6 @@
 			}
 		}
 		
-		function reset(){
-			
-		}
 		
 		/* Enemy Class */
 		var Enemies = [];
@@ -133,18 +134,21 @@
 			/*
 				properties with the prefix _ notates a position in a matrix, from which the position on canvas is determined.
 				this.x and this.y are the literal positions on canvas
-				x_offset and y_offset are added to the _x and _y post calculations, and the x and y are the results
 			*/
+			
+			// set up position property
+			this.pos = new Vector2d();
 			
 			// uses supplied x if not null, otherwise determined by id
 			this._x = x!=null ? x : this.id % 8;
-			this.x = 0;
-			this.x_offset = 0;
+			this.pos.x = 25 + this._x * 50;
 			
 			// uses supplied y if not null, otherwise determined by id
 			this._y = y!=null ? y : Math.floor(this.id / 8);
-			this.y = 0;
-			this.y_offset = 0;
+			this.pos.y = 25 + this._y * 50;
+			
+			// set up velocity
+			this.vel = new Vector2d(3,0)
 			
 			this.width = 30;
 			this.height = 30;
@@ -152,15 +156,18 @@
 			// function to draw this enemy
 			this.drawMe = function(){
 				ctx.fillStyle = "white";
-				ctx.fillRect(this.x, this.y, this.width, this.height);
+				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 			};
 			
 			// update per tick
 			this.update = function(){
-				this.x_offset = Math.sin(EnemyOffsetRef) * 10;
-				this.x = 25 + this._x * 50 + this.x_offset;
 				
-				this.y = 25 + this._y * 50 + this.y_offset;
+				// bounce off imaginary walls
+				if (this.pos.x - this._x * 50 + 25 >= 860 || this.pos.x - this._x * 50 <= 24){
+					this.vel.x = this.vel.x * -1;
+				}
+				
+				this.pos._add(this.vel)
 				
 				this.drawMe();
 			}
@@ -224,6 +231,14 @@
 		var ship = new Ship();
 		function Ship(){
 			
+			this.reset = function(){
+				this.width = 30;
+				this.pos = new Vector2d((canvas.width / 2) - (this.width / 2), canvas.height - 5 - this.width);
+				this.vel = new Vector2d();
+				this.maxSpeed = 10;
+			}
+			
+			
 			this.width = 30;
 			
 			this.pos = new Vector2d((canvas.width / 2) - (this.width / 2), canvas.height - 5 - this.width);
@@ -276,29 +291,11 @@
 		/* */
 		
 		
-		/* make enemies */
-		var level = enemyLevelClusters[0]; //level 1
-		// loop through each position
-		for (var i = 0; i < level.length; i++){
-			for (var ii = 0; ii < level[i].length; ii++){
-				// if the position is on, make an enemy their
-				if (level[i][ii]) new Enemy(ii,i);
-			}
-		}
-		/* */
-		
-		
-		// set of tick at the desired frame rate
-		var t = window.setInterval(tick,1000/frameRate);
-		
 		// the actual tick function
 		function tick(){
 			
 			// clear the screen
 			ctx.clearRect(0,0,canvas.width, canvas.height);
-			
-			// for the enemy movement
-			EnemyOffsetRef+= 0.1;
 			
 			
 			// (find way to update all bullets and enemies in same loop)
@@ -307,20 +304,62 @@
 				Enemies[i].update();
 			}
 			
+			
 			// update all Bullets, going in reverse insures that all bullets are updated
 			// a bullet would be skipped if the one before it was spliced, unless caught and coded for, reverse is just easier
 			for (var i = Bullets.length - 1; i >= 0; i--){
 				Bullets[i].update();
 			}
 			
+			
 			// update the ship
 			ship.update();
 			
+			
+			// check if win
 			if (Enemies.length == 0){
 				window.clearInterval(t);
 				alert("!!!  YOU WIN  !!!");
 			}
 		}
+		
+		function startLevel(level){
+			resetAll();
+			
+			var levelGrid = enemyLevelClusters[level - 1];
+			// loop through each position in grid
+			for (var i = 0; i < levelGrid.length; i++){
+				for (var ii = 0; ii < levelGrid[i].length; ii++){
+					// if the position is on, make an enemy their
+					if (levelGrid[i][ii]) new Enemy(ii,i);
+				}
+			}
+			
+			t = window.setInterval(tick, 1000/32);
+		}
+		
+		function resetAll(){
+			// move ship back
+			ship.reset();
+			
+			// empty arrays
+			Enemies = [];
+			Bullets = [];
+			
+			// clear the screen
+			ctx.clearRect(0,0,canvas.width, canvas.height);
+			
+			// turn off all intervals
+			window.clearInterval(t);
+			
+		}
+		
+		
+		/**** START THE GAME ****/
+		
+		startLevel(1);
+		
+		/****  ****/
     </script>
     
     
