@@ -57,20 +57,20 @@
 		// the levels
 		var LEVEL = 1;
 		var enemyLevelClusters = [// level 1
-							 [[2,0,0,0,0,0,2,0],
-							  [0,0,0,0,0,0,0,0],
-							  [0,0,0,2,0,0,0,0],
-							  [1,1,0,1,1,0,1,1],
-							  [1,1,0,1,1,0,1,1],
-							  [1,1,0,1,1,0,1,1]],
-							 
-							 // level 2
 							 [[1,1,1,1,1,1,1,1],
 							  [1,0,0,1,1,0,0,1],
 							  [1,0,0,1,1,0,0,1],
 							  [1,1,1,0,0,1,1,1],
 							  [1,1,1,0,0,1,1,1],
 							  [1,0,0,1,1,0,0,1]],
+							 
+							 // level 2
+							 [[0,0,0,2,0,0,0,0],
+							  [0,0,0,0,0,0,0,0],
+							  [0,0,1,1,1,1,0,0],
+							  [0,1,1,1,1,1,1,0],
+							  [1,1,0,1,1,0,1,1],
+							  [1,1,0,1,1,0,1,1]],
 							 
 							 // level 3, boss
 							 [[3],
@@ -82,7 +82,7 @@
 							 
 							 // level 4
 							 [[2],
-							  [1,1],
+							  [0,0],
 							  [1,1],
 							  [1,1],
 							  [1,1],
@@ -191,10 +191,56 @@
 		}
 		/* */
 		
+		
+		/* MotherShip class*/
+		var mothership;
+		function MotherShip(x,y){
+			// set up position property
+			this.pos = new Vector2d();
+			
+			// uses supplied x if not null, otherwise determined by id
+			this._x = x!=null ? x : this.id % 8;
+			this.pos.x = 25 + this._x * 60;
+			
+			// uses supplied y if not null, otherwise determined by id
+			this._y = y!=null ? y : Math.floor(this.id / 8);
+			this.pos.y = 75 + this._y * 50;
+			
+			// set up velocity
+			this.vel = new Vector2d(3,0)
+			
+			// default size
+			this.width = 90;
+			this.height = 80;
+			
+			// function to draw this enemy
+			this.drawMe = function(){
+				ctx.save();
+				ctx.fillStyle="white";
+				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+				ctx.restore();
+			};
+			
+			// update per tick
+			this.update = function(){
+				
+				// bounce off imaginary walls, if not a mothership
+				if (this.pos.x>canvas.width + this.width + 40){
+					this.pos.x = -this.width;
+				}
+				
+				this.pos._add(this.vel)
+				
+				this.drawMe();
+			}
+		}
+		/* */
+		
+		
 		/* Enemy Class */
 		var Enemies = [];
 		var EnemyOffsetRef = 0;
-		function Enemy(x, y, isMotherShip) {
+		function Enemy(x, y) {
 			this.id = Enemies.length;
 			
 			/*
@@ -220,12 +266,6 @@
 			this.width = 30;
 			this.height = 30;
 			
-			// change the size if MotherShip
-			if (isMotherShip){
-				this.width = 90;
-				this.height = 80;
-			}
-			
 			// function to draw this enemy
 			this.drawMe = function(){
 				ctx.save();
@@ -237,7 +277,7 @@
 			// update per tick
 			this.update = function(){
 				
-				// bounce off imaginary walls
+				// bounce off imaginary walls, if not a mothership
 				if (this.pos.x - this._x * 60 + 25 >= 780 || this.pos.x - this._x * 60 <= 24){
 					this.vel.x = this.vel.x * -1;
 				}
@@ -415,18 +455,20 @@
 				Enemies[i].update();
 			}
 			
+			// if there is a boss
+			if (boss != null){
+				boss.update();
+			}
+			
+			// if there is a mother ship
+			if (mothership != null){
+				mothership.update();
+			}
 			
 			// update all Bullets, going in reverse insures that all bullets are updated
 			// a bullet would be skipped if the one before it was spliced, unless caught and coded for, reverse is just easier
 			for (var i = Bullets.length - 1; i >= 0; i--){
 				Bullets[i].update();
-			}
-			
-			
-			// if there is a boss
-			if (boss != null){
-				boss.update();
-				boss.drawMe();
 			}
 			
 			
@@ -459,7 +501,7 @@
 				for (var ii = 0; ii < levelGrid[i].length; ii++){
 					// if the position is on, make an enemy their
 					if (levelGrid[i][ii] == 1) {new Enemy(ii,i);}
-					else if (levelGrid[i][ii] == 2) {new Enemy(ii,i,true);}
+					else if (levelGrid[i][ii] == 2) {mothership = new MotherShip(ii,i);}
 					else if (levelGrid[i][ii] == 3) {boss = new Boss();}
 				}
 			}
