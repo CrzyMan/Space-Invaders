@@ -16,6 +16,7 @@
 			<script src="arrays+.js"></script>
 			<script src="vectors.js"></script>
 			<script src="objects+.js"></script>
+			<script src="pauseableTimeEvents.js"></script>
 		<!-- -->
 		
     </head>
@@ -51,8 +52,7 @@
 		
 		
 		// set up timeouts/intervals
-		var i_motherShip = window.setInterval("if(canMotherShip){new MotherShip();}",10*1000);
-		
+		var i_motherShip = null;
 		var t_FireAtPlayer = null;
 		
 		
@@ -67,18 +67,12 @@
 		var enemyLevelClusters = [// level 1
 							 [[1,1,1,1,1,1,1,1],
 							  [1,0,0,1,1,0,0,1],
-							  [1,0,0,1,1,0,0,1],
-							  [1,1,1,0,0,1,1,1],
-							  [1,1,1,0,0,1,1,1],
-							  [1,0,0,1,1,0,0,1]],
+							  [1,1,1,1,1,1,1,1]],
 							 
 							 // level 2
 							 [[0,0,0,2,0,0,0,0],
 							  [0,0,0,0,0,0,0,0],
-							  [0,0,1,1,1,1,0,0],
-							  [0,1,1,1,1,1,1,0],
-							  [1,1,0,1,1,0,1,1],
-							  [1,1,0,1,1,0,1,1]],
+							  [0,0,1,1,1,1,0,0]],
 							 
 							 // level 3, boss
 							 [[3]],
@@ -86,12 +80,13 @@
 							 // level 4
 							 [[2],
 							  [0,0],
-							  [1,1],
-							  [1,1],
-							  [1,1],
 							  [1,1]]
 							 
 							 ];
+        
+        // other game variables
+        var SCORE = 0;
+        var LIVES = 5;
 		
 		// Pause Stuff
 		var Paused = false;
@@ -199,13 +194,10 @@
 		
 		/* MotherShip Class */
 		var daMotherShip = null;
-		//var MotherShip_Interval = 5*1000;
-		//var MotherShip_tillNextSpawn;
-		var canMotherShip = false;
 		function MotherShip() {
 			
-			// set this spawn time
-			
+			// set interval if null
+			if (i_motherShip== null) i_motherShip = new PauseableInterval("new MotherShip()", 10*1000);
 			
 			// set up position property
 			this.pos = new Vector2d(0,25);
@@ -341,6 +333,7 @@
 						if (this.intersectsWith(Enemies[i])){
 							Enemies.splice(i,1);
 							Bullets.splice(Bullets.indexOf(this),1);
+                            SCORE++;
 							return;
 						}
 					}
@@ -350,6 +343,7 @@
 						if (this.intersectsWith(daMotherShip)){
 							daMotherShip = null;
 							Bullets.splice(Bullets.indexOf(this),1);
+                            SCORE+= 10;
 							return;
 						}
 					}
@@ -362,6 +356,7 @@
 							boss.health--;
 							if (boss.health == 0){
 								boss = null;
+                                SCORE += 50;
 							}
 							Bullets.splice(Bullets.indexOf(this),1);
 							return;
@@ -373,6 +368,7 @@
 					if (this.intersectsWith(player)){
 						console.log('you died');
 						Bullets.splice(Bullets.indexOf(this),1);
+                        LIVES--;
 					}
 				}
 				
@@ -503,7 +499,7 @@
 				// picks time between 5 and 10 seconds
 				var interval = 2000 + Math.floor(Math.random() * 2 * 1000);
 				// set the timeout
-				t_FireAtPlayer = window.setTimeout("EnemyFiringHandler("+daEnemy+");", interval);
+				t_FireAtPlayer = new PauseableTimeout("EnemyFiringHandler("+daEnemy+");", interval);
 			}
 			
 			
@@ -532,6 +528,14 @@
 			
 			// update the Player
 			player.update();
+            
+            
+            // update stuff written on screen
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = "16pt Calibri";
+            ctx.fillText("Score: "+SCORE+"    Lives: "+LIVES,0,16);
+            ctx.restore();
 			
 			
 			// check if win
@@ -571,7 +575,7 @@
 				for (var ii = 0; ii < levelGrid[i].length; ii++){
 					// if the position is on, make an enemy their
 					if (levelGrid[i][ii] == 3) {new Boss();}
-					else if (levelGrid[i][ii] == 2) {canMotherShip=true;new MotherShip();}
+					else if (levelGrid[i][ii] == 2) {new MotherShip();}
 					else if (levelGrid[i][ii] == 1) {new Enemy(ii,i);}
 				}
 			}
@@ -592,8 +596,15 @@
 			
 			// turn off all intervals/timeouts
 			window.clearInterval(t);
-			t_FireAtPlayer = null;
+			if (t_FireAtPlayer!=null) t_FireAtPlayer.clearTimeout();
+            t_FireAtPlayer = null;
+            if (i_motherShip!=null) i_motherShip.clearInterval();
+            i_motherShip = null;
 			canMotherShip = false;
+            
+            // nullify enemies
+            daMotherShip = null;
+            boss = null;
 			
 		}
 		
@@ -614,7 +625,8 @@
 			// if it is now paused
 			if (Paused){
 				// compensate if a mother ship is going
-				
+				i_motherShip.pause();
+                t_FireAtPlayer.pause();
 				
 				// make pause menu
 				ctx.save();
@@ -631,7 +643,8 @@
 				ctx.restore();						
 			} else { // game restarted
 				// restart motherShips, but with appropriate time left
-				
+				i_motherShip.resume();
+                t_FireAtPlayer.resume();
 				
 				// clear screen and redraw the player
 				ctx.clearRect(0,0,canvas.width, canvas.height);
@@ -658,6 +671,7 @@
 		startLevel(LEVEL);
 		
 		/****  ****/
+		
     </script>
     
     
