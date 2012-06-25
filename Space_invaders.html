@@ -40,12 +40,20 @@
 		var ctx = canvas.getContext('2d');
 		ctx.fillStyle = "white";
 		
+		
 		canvas.height = 560;//window.innerHeight - 30;
 		canvas.width = 1250;//window.innerWidth - 30;
+		
 		
 		var frameRate = 32;
 		// set up interval for each tick
 		var t = window.setInterval();
+		
+		
+		// set up timeouts/intervals
+		var i_motherShip = window.setInterval("if(canMotherShip){new MotherShip();}",10*1000);
+		
+		var t_FireAtPlayer = null;
 		
 		
 		// for images
@@ -73,12 +81,7 @@
 							  [1,1,0,1,1,0,1,1]],
 							 
 							 // level 3, boss
-							 [[3],
-							  [0],
-							  [1,1,1,1,1,1,1,1],
-							  [1,1,1,1,1,1,1,1],
-							  [1,1,1,1,1,1,1,1],
-							  [1,1,1,1,1,1,1,1]],
+							 [[3]],
 							 
 							 // level 4
 							 [[2],
@@ -188,23 +191,24 @@
 				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 				ctx.restore();
 			}
+			
+			boss = this;
 		}
 		/* */
 		
 		
-		/* MotherShip class*/
-		var mothership;
-		function MotherShip(x,y){
+		/* MotherShip Class */
+		var daMotherShip = null;
+		//var MotherShip_Interval = 5*1000;
+		//var MotherShip_tillNextSpawn;
+		var canMotherShip = false;
+		function MotherShip() {
+			
+			// set this spawn time
+			
+			
 			// set up position property
-			this.pos = new Vector2d();
-			
-			// uses supplied x if not null, otherwise determined by id
-			this._x = x!=null ? x : this.id % 8;
-			this.pos.x = 25 + this._x * 60;
-			
-			// uses supplied y if not null, otherwise determined by id
-			this._y = y!=null ? y : Math.floor(this.id / 8);
-			this.pos.y = 75 + this._y * 50;
+			this.pos = new Vector2d(0,25);
 			
 			// set up velocity
 			this.vel = new Vector2d(3,0)
@@ -212,6 +216,9 @@
 			// default size
 			this.width = 90;
 			this.height = 80;
+			
+			this.pos.x = -this.width;
+			this.vel.x = 5;
 			
 			// function to draw this enemy
 			this.drawMe = function(){
@@ -224,23 +231,27 @@
 			// update per tick
 			this.update = function(){
 				
-				// bounce off imaginary walls, if not a mothership
-				if (this.pos.x>canvas.width + this.width + 40){
-					this.pos.x = -this.width;
+				// kill when off screen
+				if (this.pos.x>canvas.width + this.width){
+					daMotherShip = null;
 				}
 				
 				this.pos._add(this.vel)
 				
 				this.drawMe();
 			}
+			
+			// add this enemy to the array containing all enemies
+			daMotherShip = this;
 		}
-		/* */
+		/**/
 		
 		
 		/* Enemy Class */
 		var Enemies = [];
 		var EnemyOffsetRef = 0;
 		function Enemy(x, y) {
+			
 			this.id = Enemies.length;
 			
 			/*
@@ -277,7 +288,7 @@
 			// update per tick
 			this.update = function(){
 				
-				// bounce off imaginary walls, if not a mothership
+				// bounce off imaginary walls
 				if (this.pos.x - this._x * 60 + 25 >= 780 || this.pos.x - this._x * 60 <= 24){
 					this.vel.x = this.vel.x * -1;
 				}
@@ -285,6 +296,12 @@
 				this.pos._add(this.vel)
 				
 				this.drawMe();
+			}
+			
+			this.fire = function(){
+				// make a bullet with a position of exactly the middle of the enemy, and a velocity of 5 going down
+				new Bullet(new Vector2d(this.pos.x + this.width/2 - 10/2, this.pos.y+this.height-20), new Vector2d(0,10), true);
+				t_FireAtPlayer = null;
 			}
 			
 			// add this enemy to the array containing all enemies
@@ -313,33 +330,53 @@
 				this.pos._add(this.vel);
 				
 				// remove from Bullets and stop function if offscreen
-				if (this.pos.y + this.height < 0){
+				if (this.pos.y + this.height < 0 || this.pos.y >= canvas.height){
 					Bullets.splice(Bullets.indexOf(this), 1);
 					return;
 				}
 				
 				// make collision logic here, going in reverse ensures that all enemies are checked
-				for (var i = Enemies.length - 1; i >= 0; i--){
-					if (this.intersectsWith(Enemies[i])){
-						Enemies.splice(i,1);
+				if (!isBomb){
+					for (var i = Enemies.length - 1; i >= 0; i--){
+						if (this.intersectsWith(Enemies[i])){
+							Enemies.splice(i,1);
+							Bullets.splice(Bullets.indexOf(this),1);
+							return;
+						}
+					}
+					
+					// if there is a mother ship
+					if (daMotherShip != null){
+						if (this.intersectsWith(daMotherShip)){
+							daMotherShip = null;
+							Bullets.splice(Bullets.indexOf(this),1);
+							return;
+						}
+					}
+					
+					// if fighting a boss
+					if (boss != null){
+						// if you hit the boss
+						if (this.intersectsWith(boss)){
+							// take away boss health
+							boss.health--;
+							if (boss.health == 0){
+								boss = null;
+							}
+							Bullets.splice(Bullets.indexOf(this),1);
+							return;
+						}
+					}
+				} else
+				// check if colliding with the player if it is a bomb
+				{
+					if (this.intersectsWith(player)){
+						console.log('you died');
 						Bullets.splice(Bullets.indexOf(this),1);
-						return;
 					}
 				}
 				
-				// if fighting a boss
-				if (boss != null){
-					// if you hit the boss
-					if (this.intersectsWith(boss)){
-						// take away boss health
-						boss.health--;
-						if (boss.health == 0){
-							boss = null;
-						}
-						Bullets.splice(Bullets.indexOf(this),1);
-						return;
-					}
-				}
+				
 				
 				// draw it
 				this.drawMe();
@@ -440,6 +477,16 @@
 		/* */
 		
 		
+		
+		
+		/*******************\
+		|*******************|
+		|*******************|
+		|*******************|
+		|*******************|
+		\*******************/
+		
+		
 		// the actual tick function
 		function tick(){
 			// don't tick if paused
@@ -449,20 +496,31 @@
 			ctx.clearRect(0,0,canvas.width, canvas.height);
 			
 			
+			// set when and which enemy will fire next
+			if (t_FireAtPlayer == null){
+				// picks a "random" enemy
+				var daEnemy = Math.floor(Math.random() * Enemies.length);
+				// picks time between 5 and 10 seconds
+				var interval = 2000 + Math.floor(Math.random() * 2 * 1000);
+				// set the timeout
+				t_FireAtPlayer = window.setTimeout("EnemyFiringHandler("+daEnemy+");", interval);
+			}
+			
+			
 			// (find way to update all bullets and enemies in same loop)
 			// update all enemies
 			for (var i = 0; i < Enemies.length; i++){
 				Enemies[i].update();
 			}
 			
+			// if there is a mothership
+			if (daMotherShip != null){
+				daMotherShip.update();
+			}
+			
 			// if there is a boss
 			if (boss != null){
 				boss.update();
-			}
-			
-			// if there is a mother ship
-			if (mothership != null){
-				mothership.update();
 			}
 			
 			// update all Bullets, going in reverse insures that all bullets are updated
@@ -492,6 +550,18 @@
 			}
 		}
 		
+		
+		/*******************\
+		|*******************|
+		|*******************|
+		|*******************|
+		|*******************|
+		\*******************/
+		
+		
+		
+		
+		
 		function startLevel(level){
 			resetAll();
 			
@@ -500,9 +570,9 @@
 			for (var i = 0; i < levelGrid.length; i++){
 				for (var ii = 0; ii < levelGrid[i].length; ii++){
 					// if the position is on, make an enemy their
-					if (levelGrid[i][ii] == 1) {new Enemy(ii,i);}
-					else if (levelGrid[i][ii] == 2) {mothership = new MotherShip(ii,i);}
-					else if (levelGrid[i][ii] == 3) {boss = new Boss();}
+					if (levelGrid[i][ii] == 3) {new Boss();}
+					else if (levelGrid[i][ii] == 2) {canMotherShip=true;new MotherShip();}
+					else if (levelGrid[i][ii] == 1) {new Enemy(ii,i);}
 				}
 			}
 			
@@ -520,10 +590,13 @@
 			// clear the screen
 			ctx.clearRect(0,0,canvas.width, canvas.height);
 			
-			// turn off all intervals
+			// turn off all intervals/timeouts
 			window.clearInterval(t);
+			t_FireAtPlayer = null;
+			canMotherShip = false;
 			
 		}
+		
 		
 		function TogglePaused(){
 			// leave if you can't toggle
@@ -540,6 +613,9 @@
 			
 			// if it is now paused
 			if (Paused){
+				// compensate if a mother ship is going
+				
+				
 				// make pause menu
 				ctx.save();
 				ctx.fillStyle = "rgba(0,0,0,.3)";
@@ -553,13 +629,29 @@
 				ctx.fillText("Paused",canvas.width/2 - 120, canvas.height/2 + 20);
 				
 				ctx.restore();						
-			} else { // if it isn't paused
+			} else { // game restarted
+				// restart motherShips, but with appropriate time left
+				
+				
+				// clear screen and redraw the player
 				ctx.clearRect(0,0,canvas.width, canvas.height);
 				player.drawMe();
 			}
-			
 		}
 		
+		// handler for enemies firing back, necesarry because the timer will never null out other wise
+		function EnemyFiringHandler(enemyNumber){
+			// if the enemy still exists
+			if (Enemies[enemyNumber]){
+				Enemies[enemyNumber].fire();
+			}
+			// otherwise, if there are even still any enemies
+			else if (Enemies.length){
+				enemyNumber = Math.floor(Math.random() * Enemies.length);
+				Enemies[enemyNumber].fire();
+			}
+			// if there aren't any enemies I just won't reset it here
+		}
 		
 		/**** START THE GAME ****/
 		
