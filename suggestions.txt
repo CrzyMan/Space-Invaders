@@ -3,3 +3,29 @@
 // when completed : [x] frodude95 : Make a favicon
 
 [ ] frodude95 : Make a favicon
+
+[ ] frodude95 : A sprite sheet is set up like this. Each 'cell' of a row has a standard size. And you don't have to fill all rows.
+                suppose x represents a 'cell' that has something in it. Each row can also be seperated into different files.
+                Don't worry about each row being a different height, it doesn't affect anything. Just tell me the dimensions
+                of each frame type (ex: alien1->alien3 - 64x32, motherShip - 86x124, bullet - 20x10, etc.)
+
+                  frame1   frame2   frame3   frame4
+                +--------+--------+--------+--------+
+    alien1      |   x    |   x    |        |        |
+                +--------+--------+--------+--------+
+    alien2      |   x    |   x    |        |        |
+                +--------+--------+--------+--------+
+    alien3      |   x    |   x    |        |        |
+                +--------+--------+--------+--------+
+motherShip      |   x    |   x    |   x    |        |
+                +--------+--------+--------+--------+
+    boss1       |   x    |   x    |        |        |
+                +--------+--------+--------+--------+
+    boss2       |   x    |   x    |        |        |
+                +--------+--------+--------+--------+
+    boss3       |   x    |   x    |        |        |
+                +--------+--------+--------+--------+
+    bullet      |   x    |        |        |        |
+                +--------+--------+--------+--------+
+ explosion      |   x    |   x    |   x    |   x    |
+                +--------+--------+--------+--------+
