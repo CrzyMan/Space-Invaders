@@ -17,15 +17,14 @@
 			<script src="vectors.js"></script>
 			<script src="objects+.js"></script>
 			<script src="pauseableTimeEvents.js"></script>
+            <script src="animatedSprite.js"></script>
 		<!-- -->
 		
     </head>
     
-	<body onload="loaded();" bgColor="grey">
+	<body onload="" bgColor="grey">
 		<!-- loading area -->
-			<img src="Favicon.ico" id="img_ship" onload="this.loaded = true" hidden="true"/>
-			<img src="Favicon.ico" id="img_enemy" onload="this.loaded = true" hidden="true"/>
-			<img src="Favicon.ico" id="img_bullet" onload="this.loaded = true" hidden="true"/>
+			<img src="alien1.png" id="img_spriteSheet" hidden="true"/>
 		<!-- -->
 		
         <canvas id='canvas'>
@@ -34,6 +33,13 @@
     </body>
 	
     <script>
+        /************************ TO DO ******************************\
+         *
+         *
+         *
+         *
+        \*************************************************************/
+        
 		/* initialization of variables */
 		
 		// stuff for drawing
@@ -56,11 +62,31 @@
 		var t_FireAtPlayer = null;
 		
 		
-		// for images
-		var img_ship = document.getElementById('img_ship'); img_ship.loaded = false;
-		var img_enemy = document.getElementById('img_enemy'); img_enemy.loaded = false;
-		var img_bullet = document.getElementById('img_bullet'); img_bullet.loaded = false;
+		/* for images */
 		
+		var sprites = {
+            alien1: null,
+            alien2: null,
+            alien3: null,
+            
+            motherShip: null,
+            
+            boss1: null,
+            boss2: null,
+            boss3: null,
+            
+            bullet: null,
+            
+            explosion: null,
+        }
+        
+        var img_spriteSheet = document.getElementById('img_spriteSheet');
+        img_spriteSheet.onload = function(){
+            sprites.alien1 = new AnimatedSprite({image: this, frameCount: 2, fps: 1, sourceY: 0});
+        }
+        
+		/* */
+        
 		
 		// the levels
 		var LEVEL = 1;
@@ -142,17 +168,6 @@
 		}
 		
 		/* */
-		
-		
-		function loaded(){
-			// if all loaded
-			if (img_bullet.loaded && img_enemy.loaded && img_ship.loaded){
-				console.log("done loading");
-			} else {
-				console.log("still loading");
-				window.setTimeout(load,1000);
-			}
-		}
 		
 		
 		/* Boss Class */
@@ -244,8 +259,10 @@
 		var EnemyOffsetRef = 0;
 		function Enemy(x, y) {
 			
-			this.id = Enemies.length;
+            this.id = Enemies.length;
 			
+            sprites["alien"+LEVEL].restartAnimation();
+            
 			/*
 				properties with the prefix _ notates a position in a matrix, from which the position on canvas is determined.
 				this.x and this.y are the literal positions on canvas
@@ -272,8 +289,9 @@
 			// function to draw this enemy
 			this.drawMe = function(){
 				ctx.save();
-				ctx.fillStyle="white";
-				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+				//ctx.fillStyle="white";
+				//ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+                sprites["alien"+LEVEL].drawMe(this.pos.x, this.pos.y, this.width, this.height);
 				ctx.restore();
 			};
 			
@@ -624,9 +642,9 @@
 			
 			// if it is now paused
 			if (Paused){
-				// compensate if a mother ship is going
-				i_motherShip.pause();
-                t_FireAtPlayer.pause();
+				// pause pauseable timerouts and intervals
+				if (i_motherShip!=null) i_motherShip.pause();
+                if (t_FireAtPlayer!=null) t_FireAtPlayer.pause();
 				
 				// make pause menu
 				ctx.save();
@@ -643,8 +661,8 @@
 				ctx.restore();						
 			} else { // game restarted
 				// restart motherShips, but with appropriate time left
-				i_motherShip.resume();
-                t_FireAtPlayer.resume();
+				if (i_motherShip!=null) i_motherShip.resume();
+                if (t_FireAtPlayer!=null) t_FireAtPlayer.resume();
 				
 				// clear screen and redraw the player
 				ctx.clearRect(0,0,canvas.width, canvas.height);
@@ -668,7 +686,7 @@
 		
 		/**** START THE GAME ****/
 		
-		startLevel(LEVEL);
+		setTimeout(startLevel, 1000, LEVEL);
 		
 		/****  ****/
 		
