@@ -24,7 +24,7 @@
     
 	<body onload="" bgColor="grey">
 		<!-- loading area -->
-			<img src="alien1.png" id="img_spriteSheet" hidden="true"/>
+			<img src="spriteSheet.png" id="img_spriteSheet" hidden="true"/>
 		<!-- -->
 		
         <canvas id='canvas'>
@@ -82,7 +82,10 @@
         
         var img_spriteSheet = document.getElementById('img_spriteSheet');
         img_spriteSheet.onload = function(){
-            sprites.alien1 = new AnimatedSprite({image: this, frameCount: 2, fps: 1, sourceY: 0});
+            sprites.alien1 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
+			sprites.alien2 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
+			sprites.alien3 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
+			sprites.motherShip = new AnimatedSprite({image: this, frameCount: 6, fps: 6, sourceY: 10, frameWidth: 30, frameHeight: 15});
         }
         
 		/* */
@@ -221,7 +224,7 @@
 			this.vel = new Vector2d(3,0)
 			
 			// default size
-			this.width = 90;
+			this.width = 160;
 			this.height = 80;
 			
 			this.pos.x = -this.width;
@@ -230,8 +233,9 @@
 			// function to draw this enemy
 			this.drawMe = function(){
 				ctx.save();
-				ctx.fillStyle="white";
-				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+				//ctx.fillStyle="white";
+				//ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+				sprites.motherShip.drawMe(this.pos.x, this.pos.y, this.width, this.height);
 				ctx.restore();
 			};
 			

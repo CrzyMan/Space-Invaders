@@ -19,10 +19,8 @@ function AnimatedSprite(config){
         }
     }
     
-    this.frameWidth = this.image.width / this.frameCount;
-    this.frameHeight= this.image.height;
-    
-    
+    if (this.frameWidth==null) this.frameWidth = this.image.width / this.frameCount;
+    if (this.frameHeight==null) this.frameHeight = this.image.height;
     
     this.stepSprite = function(sender){
         sender.sourceX = sender.frameWidth * sender.currentFrame;
