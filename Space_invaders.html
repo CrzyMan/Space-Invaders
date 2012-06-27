@@ -54,7 +54,7 @@
 		
 		var frameRate = 32;
 		// set up interval for each tick
-		var t = window.setInterval();
+		var t = null;
 		
 		
 		// set up timeouts/intervals
@@ -67,12 +67,10 @@
 		var sprites = {
             alien1: null,
             alien2: null,
-            alien3: null,
+            alien4: null,
             
             motherShip: null,
-            
-            boss1: null,
-            boss2: null,
+			
             boss3: null,
             
             bullet: null,
@@ -84,8 +82,9 @@
         img_spriteSheet.onload = function(){
             sprites.alien1 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
 			sprites.alien2 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
-			sprites.alien3 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
+			sprites.alien4 = new AnimatedSprite({image: this, frameCount: 2, fps: 2, sourceY: 0, frameWidth: 10, frameHeight: 10});
 			sprites.motherShip = new AnimatedSprite({image: this, frameCount: 6, fps: 6, sourceY: 10, frameWidth: 30, frameHeight: 15});
+			sprites.boss3 = new AnimatedSprite({image: this, frameCount: 3, fps: 6, sourceY: 25, frameWidth: 90, frameHeight: 60});
         }
         
 		/* */
@@ -120,6 +119,7 @@
 		// Pause Stuff
 		var Paused = false;
 		var canTogglePause = true;
+		var Playing = false;
 		
 		// fireing stuff
 		var canFire = true;
@@ -129,25 +129,34 @@
 		var PressedKeys = {left: false, up: false, right: false};
 		document.onkeydown = function(e){
 			var code = e.keyCode || e.which;
-			switch (code){
-				case Keys.up:
-					PressedKeys.up = true;
-					break;
-				case Keys.left:
-					PressedKeys.left = true;
-					break;
-				case Keys.right:
-					PressedKeys.right = true;
-					break;
-				case Keys.p:
-					TogglePaused();
-					break;
-				case Keys.w:
-					Enemies = [];
-					break;
-				default:
-					//alert(code);
-					break;
+			if (Playing){
+				switch (code){
+					case Keys.up:
+						PressedKeys.up = true;
+						break;
+					case Keys.left:
+						PressedKeys.left = true;
+						break;
+					case Keys.right:
+						PressedKeys.right = true;
+						break;
+					case Keys.p:
+						TogglePaused();
+						break;
+					case Keys.w:
+						Enemies = [];
+						break;
+					default:
+						//alert(code);
+						break;
+				}
+			} else {
+				if (code == Keys.p){
+					Playing = true;
+					LEVEL = 1;
+					resetAll();
+					startLevel(LEVEL);
+				}
 			}
 		}
 		document.onkeyup = function(e){
@@ -200,8 +209,9 @@
 			// draws it
 			this.drawMe = function(){
 				ctx.save();
-				ctx.fillStyle = "white";
-				ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+				//ctx.fillStyle = "white";
+				//ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+				sprites["boss"+LEVEL].drawMe(this.pos.x, this.pos.y, this.width, this.height);
 				ctx.restore();
 			}
 			
@@ -265,12 +275,8 @@
 			
             this.id = Enemies.length;
 			
-            sprites["alien"+LEVEL].restartAnimation();
-            
-			/*
-				properties with the prefix _ notates a position in a matrix, from which the position on canvas is determined.
-				this.x and this.y are the literal positions on canvas
-			*/
+			var str = "alien"+LEVEL+"";
+            sprites[str].restartAnimation();
 			
 			// set up position property
 			this.pos = new Vector2d();
@@ -536,6 +542,9 @@
 				daMotherShip.update();
 			}
 			
+			// leave if Not playing
+			if (!Playing) {player.drawMe(); return;}
+			
 			// if there is a boss
 			if (boss != null){
 				boss.update();
@@ -571,6 +580,7 @@
 					startLevel(LEVEL);
 				} else {
 					alert("!!!! GAME OVER !!!!");
+					SetHomeScreen();
 				}
 				
 			}
@@ -587,7 +597,7 @@
 		
 		
 		
-		
+		// hey there
 		function startLevel(level){
 			resetAll();
 			
@@ -608,6 +618,11 @@
 		function resetAll(){
 			// move Player back
 			player.reset();
+			
+			SCORE = 0;
+			LIVES = 5;
+			
+			canFire = true;
 			
 			// empty arrays
 			Enemies = [];
@@ -688,9 +703,18 @@
 			// if there aren't any enemies I just won't reset it here
 		}
 		
+		
+		function SetHomeScreen(){
+			Playing = false;
+			resetAll();
+			canFire = false;
+			player.drawMe();
+			t = window.setInterval(tick, 1000/frameRate);
+			startLevel(LEVEL = 2);
+		}
 		/**** START THE GAME ****/
 		
-		setTimeout(startLevel, 1000, LEVEL);
+		setTimeout(SetHomeScreen, 100);
 		
 		/****  ****/
 		
