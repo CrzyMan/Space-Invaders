@@ -543,7 +543,25 @@
 			}
 			
 			// leave if Not playing
-			if (!Playing) {player.drawMe(); return;}
+			if (!Playing) {
+                player.drawMe();
+                
+                // make main screen
+                ctx.save();
+                ctx.fillStyle = "rgba(0,0,0,.3)";
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                
+                ctx.fillStyle = "rgba(150,150,150,.8)";
+                ctx.fillRect(canvas.width / 2 - 320, canvas.height / 2 - 80, 560, 160);
+                    
+                ctx.fillStyle = "White";
+                ctx.font = "60pt Calibri"
+                ctx.fillText("Press 'p' To Play",canvas.width/2 - 300, canvas.height/2 + 20);
+                
+                ctx.restore();
+                
+                return;
+            }
 			
 			// if there is a boss
 			if (boss != null){
@@ -711,6 +729,10 @@
 			player.drawMe();
 			t = window.setInterval(tick, 1000/frameRate);
 			startLevel(LEVEL = 2);
+            
+            
+            		
+            
 		}
 		/**** START THE GAME ****/
 		
