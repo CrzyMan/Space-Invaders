@@ -637,9 +637,6 @@
 			// move Player back
 			player.reset();
 			
-			SCORE = 0;
-			LIVES = 5;
-			
 			canFire = true;
 			
 			// empty arrays
@@ -730,7 +727,8 @@
 			t = window.setInterval(tick, 1000/frameRate);
 			startLevel(LEVEL = 2);
             
-            
+            SCORE = 0;
+			LIVES = 5;
             		
             
 		}
